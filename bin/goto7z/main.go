@@ -1,10 +1,14 @@
-package goto7z
+package main
 
 import (
 	"anniext.natapp4.cc/xt/goto7z/profile"
+	"anniext.natapp4.cc/xt/goto7z/store"
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -13,15 +17,53 @@ var (
 		Short: `A simple automatic decompression 7z program`,
 		Run: func(_ *cobra.Command, _ []string) {
 
+			err := filepath.Walk(input, store.Visit)
+			if err != nil {
+				fmt.Printf("Error walking the path %q: %v\n", input, err)
+				return
+			}
 		},
 	}
 
 	instanceProfile *profile.Profile
+	input           string
+	output          string
+	passwd          string
+	mode            string
 )
 
 func init() {
 	// 初始化配置文件
 	cobra.OnInitialize(initConfig)
+
+	rootCmd.PersistentFlags().StringVarP(&input, "input", "i", "", `decompress input Path`)
+	rootCmd.PersistentFlags().StringVarP(&output, "output", "o", "", `decompress output Path`)
+	rootCmd.PersistentFlags().StringVarP(&passwd, "passwd", "p", "", `decompress password`)
+	rootCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "7z", `decompression mode, which can be 7z or tar and zip`)
+
+	err := viper.BindPFlag("input", rootCmd.PersistentFlags().Lookup("input"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("passwd", rootCmd.PersistentFlags().Lookup("passwd"))
+	if err != nil {
+		panic(err)
+	}
+	err = viper.BindPFlag("mode", rootCmd.PersistentFlags().Lookup("mode"))
+	if err != nil {
+		panic(err)
+	}
+
+	workPath, _ := os.Getwd()
+	viper.SetDefault("input", workPath)
+	viper.SetDefault("output", workPath)
+	viper.SetDefault("passwd", "costuan.com")
+	viper.SetDefault("mode", "7z")
+	viper.SetEnvPrefix("goto7z")
 }
 
 func Execute() error {
@@ -44,4 +86,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(*instanceProfile)
 }

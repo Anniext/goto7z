@@ -1,9 +1,12 @@
 package main
 
+//go:generate go install anniext.natapp4.cc/xt/goto7z
+
 import (
 	"anniext.natapp4.cc/xt/goto7z/profile"
 	"anniext.natapp4.cc/xt/goto7z/store"
 	"fmt"
+	"github.com/gosuri/uiprogress"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
@@ -17,11 +20,13 @@ var (
 		Short: `A simple automatic decompression 7z program`,
 		Run: func(_ *cobra.Command, _ []string) {
 
+			store.InitBar(input)
 			err := filepath.Walk(input, store.Visit)
 			if err != nil {
 				fmt.Printf("Error walking the path %q: %v\n", input, err)
 				return
 			}
+			uiprogress.Stop()
 		},
 	}
 
@@ -86,5 +91,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(*instanceProfile)
 }
